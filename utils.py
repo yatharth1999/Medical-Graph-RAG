@@ -6,33 +6,34 @@ from camel.storages import Neo4jGraph
 import uuid
 from summerize import process_chunks
 import openai
-
+# Define the first system prompt to give response from graph data
 sys_prompt_one = """
 Please answer the question using insights supported by provided graph-based data relevant to medical information.
 """
-
+# Define the second system prompt to modify model responses based on references
 sys_prompt_two = """
 Modify the response to the question using the provided references. Include precise citations relevant to your answer. You may use multiple citations simultaneously, denoting each with the reference index number. For example, cite the first and third documents as [1][3]. If the references do not pertain to the response, simply provide a concise answer to the original question.
 """
 
 # Add your own OpenAI API key
+# generating embeddings using openai api\
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
 def get_embedding(text, mod = "text-embedding-3-small"):
     client = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
-
     response = client.embeddings.create(
         input=text,
         model=mod
     )
 
     return response.data[0].embedding
-
+# Fetch texts from Neo4j
 def fetch_texts(n4j):
     # Fetch the text for each node
     query = "MATCH (n) RETURN n.id AS id"
     return n4j.query(query)
 
+# Add embeddings to Neo4j
 def add_embeddings(n4j, node_id, embedding):
     # Upload embeddings to Neo4j
     query = "MATCH (n) WHERE n.id = $node_id SET n.embedding = $embedding"
